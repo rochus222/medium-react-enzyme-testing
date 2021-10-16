@@ -1,0 +1,1 @@
+export const dataFixture = ["item 1", "item 2"];
