@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from "react";
 import ComponentTemplate from "./ComponentTemplate";
-import { loadData } from "../api"
+import { loadData } from "../api";
 
 const Component = () => {
-    const [data, setData] = useState([]);
-    const refresh = async () => setData(await loadData());
-    const clear = () => setData([]);
+  const [data, setData] = useState([]);
+  const refresh = async () => setData(await loadData());
+  const clear = () => setData([]);
 
-    useEffect(() => {
-        refresh();
-    }, []);
+  useEffect(() => {
+    refresh();
+  }, []);
 
-    return (
-        <ComponentTemplate
-            title={`Items (${data.length})`}
-            items={data}
-            refresh={refresh}
-            clear={clear} 
-        />
-    );
-}
+  return (
+    <ComponentTemplate
+      title={`Items (${data.length})`}
+      items={data}
+      refresh={refresh}
+      clear={clear}
+    />
+  );
+};
 
 export default Component;

@@ -1,71 +1,139 @@
 import React from "react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import Component from "./Component";
-import { shallow } from "enzyme";
-import ComponentTemplate from "./ComponentTemplate";
 import * as api from "../api";
-import { mount } from "../utils";
-import { act } from "react-dom/test-utils";
 import { dataFixture } from "../fixtures/data";
+import { getPropForComponent, wait, clearPropsStorage } from "../utils";
 
-jest.mock("./ComponentTemplate", () => () => <div id="component-template" />);
+jest.mock("./ComponentTemplate", () => {
+  const { mockComponent } = require("../utils");
+  return mockComponent("ComponentTemplate");
+});
 jest.mock("../api", () => ({
-    loadData: jest.fn()
+  loadData: jest.fn(),
 }));
 jest.spyOn(api, "loadData").mockResolvedValue(dataFixture);
 
 beforeAll(() => {
-    api.loadData.mockClear();
+  api.loadData.mockClear();
+});
+
+beforeEach(() => {
+  clearPropsStorage();
 });
 
 it("renders mocked ComponentTemplate with correct default props", async () => {
-    const wrapper = shallow(<Component />);
+  render(<Component />);
 
-    expect(wrapper.find(ComponentTemplate).length).toBe(1);
-    expect(wrapper.find(ComponentTemplate).props().items).toEqual([]);
-    expect(wrapper.find(ComponentTemplate).props().title).toContain("Items");
-    expect(wrapper.find(ComponentTemplate).props().title).toContain("0");
+  await waitFor(async () => {
+    expect(await screen.findByTestId("ComponentTemplate")).not.toBeNull();
+    expect(
+      getPropForComponent(
+        await screen.findByTestId("ComponentTemplate"),
+        "ComponentTemplate",
+        "title"
+      )
+    ).toContain("Items");
+    expect(
+      getPropForComponent(
+        await screen.findByTestId("ComponentTemplate"),
+        "ComponentTemplate",
+        "title"
+      )
+    ).toContain("0");
+    expect(
+      getPropForComponent(
+        await screen.findByTestId("ComponentTemplate"),
+        "ComponentTemplate",
+        "items"
+      )
+    ).toEqual([]);
+  });
 });
 
 it("renders mocked ComponentTemplate with data loaded from api after mount", async () => {
-    const wrapper = await mount(<Component />);
-    const data = await api.loadData();
-    wrapper.update();
+  render(<Component />);
 
-    expect(wrapper.find(ComponentTemplate).length).toBe(1);
-    expect(wrapper.find(ComponentTemplate).props().items).toEqual(data);
-    expect(wrapper.find(ComponentTemplate).props().title).toContain("Items");
-    expect(wrapper.find(ComponentTemplate).props().title).toContain(data.length);
+  await waitFor(async () => {
+    const data = await api.loadData();
+    expect(await screen.findByTestId("ComponentTemplate")).not.toBeNull();
+    expect(
+      getPropForComponent(
+        await screen.findByTestId("ComponentTemplate"),
+        "ComponentTemplate",
+        "title"
+      )
+    ).toContain(`${data.length}`);
+    expect(
+      getPropForComponent(
+        await screen.findByTestId("ComponentTemplate"),
+        "ComponentTemplate",
+        "items"
+      )
+    ).toEqual(data);
+  });
 });
 
 it("clears data after clear is called", async () => {
-    const wrapper = await mount(<Component />);
-    wrapper.update();
+  render(<Component />);
 
-    act(() => wrapper.find(ComponentTemplate).props().clear());
+  await waitFor(async () => {
+    const data = await api.loadData();
+    getPropForComponent(
+      await screen.findByTestId("ComponentTemplate"),
+      "ComponentTemplate",
+      "clear"
+    )();
 
-    wrapper.update();
-
-    expect(wrapper.find(ComponentTemplate).length).toBe(1);
-    expect(wrapper.find(ComponentTemplate).props().items).toEqual([]);
-    expect(wrapper.find(ComponentTemplate).props().title).toContain("Items");
-    expect(wrapper.find(ComponentTemplate).props().title).toContain("0");
+    expect(await screen.findByTestId("ComponentTemplate")).not.toBeNull();
+    expect(
+      getPropForComponent(
+        await screen.findByTestId("ComponentTemplate"),
+        "ComponentTemplate",
+        "title"
+      )
+    ).toContain("0");
+    expect(
+      getPropForComponent(
+        await screen.findByTestId("ComponentTemplate"),
+        "ComponentTemplate",
+        "items"
+      )
+    ).toEqual([]);
+  });
 });
 
 it("loads data again after refresh is called", async () => {
-    const wrapper = await mount(<Component />);
-    wrapper.update();
+  render(<Component />);
 
-    act(() => wrapper.find(ComponentTemplate).props().clear());
-
-    wrapper.update();
-
-    await act(() => wrapper.find(ComponentTemplate).props().refresh());
-
+  await waitFor(async () => {
     const data = await api.loadData();
-    wrapper.update();
 
-    expect(wrapper.find(ComponentTemplate).length).toBe(1);
-    expect(wrapper.find(ComponentTemplate).props().items).toEqual(data);
-    expect(wrapper.find(ComponentTemplate).props().title).toContain("Items");
-    expect(wrapper.find(ComponentTemplate).props().title).toContain(data.length);
+    getPropForComponent(
+      await screen.findByTestId("ComponentTemplate"),
+      "ComponentTemplate",
+      "clear"
+    )();
+    getPropForComponent(
+      await screen.findByTestId("ComponentTemplate"),
+      "ComponentTemplate",
+      "refresh"
+    )();
+
+    expect(await screen.findByTestId("ComponentTemplate")).not.toBeNull();
+    expect(
+      getPropForComponent(
+        await screen.findByTestId("ComponentTemplate"),
+        "ComponentTemplate",
+        "title"
+      )
+    ).toContain(`${data.length}`);
+    expect(
+      getPropForComponent(
+        await screen.findByTestId("ComponentTemplate"),
+        "ComponentTemplate",
+        "items"
+      )
+    ).toEqual(data);
+  });
 });

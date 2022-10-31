@@ -1,10 +1,11 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import Component from './Component/Component';
+import React from "react";
+import { createRoot } from "react-dom/client";
 
-ReactDOM.render(
+import Component from "./Component/Component";
+
+const root = createRoot(document.getElementById("root")); // createRoot(container!) if you use TypeScript
+root.render(
   <React.StrictMode>
     <Component />
-  </React.StrictMode>,
-  document.getElementById('root')
+  </React.StrictMode>
 );
